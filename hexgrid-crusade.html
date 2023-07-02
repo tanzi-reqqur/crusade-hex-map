@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .resourcesBox {
+            position: absolute;
+            right: 10px;
+            padding: 10px;
+            border: 3px solid;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            color: white;
+            text-align: center;
+        }
+
+        #resourcesImperium {
+            border-color: #5D3FD3; /* Blue for Imperium */
+            background: #5D3FD3;
+            top: 10px;
+        }
+
+        #resourcesChaos {
+            border-color: #702963; /* Red for Chaos */
+            background: #702963;
+            top: 60px;
+        }
+
+        #resourcesXenos {
+            border-color: #40B5AD; /* Green for Xenos */
+            background: #40B5AD;
+            top: 110px;
+        }
+    </style>
+</head>
+<body style="background-image:url('https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80');">
+    <canvas 
+        id="hexGrid" 
+        width="720" 
+        height="1000" 
+        style=
+            "border:none; 
+             background: linear-gradient(to right, rgba(255, 122, 89, 0), rgba(255,122,89,0));
+             position: absolute;
+             "></canvas>
+    <div 
+        id="dialog" 
+        style="display:none; 
+               position: absolute; 
+               background: rgba(255, 255, 255, 0.8); 
+               border: 2px solid black; 
+               padding: 10px;
+               border-radius: 5px;
+               font-family: Arial, sans-serif;
+               font-size: 18px;
+               line-height: 1.5;
+               box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
+               transition: opacity 0.2s ease-in-out;
+               ">
+        <p id="dialogText"></p>
+    </div>
+    <div id="resourcesImperium" class="resourcesBox"></div>
+    <div id="resourcesChaos" class="resourcesBox"></div>
+    <div id="resourcesXenos" class="resourcesBox"></div>
+
+
+    <script>
+        var tileData = {
+        // ... This is where we keep the territory data ... //
+        // ... Copy and paste all the values from Google Sheet Tab 2 Under here: ... //
+'0,0': {position: '0,0', type: 'Command', name: 'Imperial Bastion', defence: 3000, resources: 20, owner: 'Imperium', perk: 'Bonus 1'},
+'0,1': {position: '0,1', type: 'Key Location', name: 'Adeptus Mechanicus Forge World', defence: 2000, resources: 10, owner: 'Imperium', perk: 'Bonus 2'},
+'0,2': {position: '0,2', type: 'Key Location', name: 'Librarium Archive', defence: 2000, resources: 10, owner: 'Imperium', perk: 'Bonus 3'},
+'0,3': {position: '0,3', type: 'Key Location', name: 'Emperor\'s Shrine', defence: 2000, resources: 10, owner: 'Imperium', perk: 'Bonus 4'},
+'0,4': {position: '0,4', type: 'Defense Line', name: 'Guard Barricade', defence: 1500, resources: 5, owner: 'Imperium', perk: 'No Bonus'},
+'0,5': {position: '0,5', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'0,6': {position: '0,6', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'0,7': {position: '0,7', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'1,0': {position: '1,0', type: 'Defense Line', name: 'Astartes Trenches', defence: 2000, resources: 5, owner: 'Imperium', perk: 'No Bonus'},
+'1,1': {position: '1,1', type: 'Supply Line', name: 'Munitorum Route', defence: 500, resources: 3, owner: 'Imperium', perk: 'No Bonus'},
+'1,2': {position: '1,2', type: 'Supply Line', name: 'Ecclesiarchy Pilgrimage Path', defence: 100, resources: 3, owner: 'Imperium', perk: 'No Bonus'},
+'1,3': {position: '1,3', type: 'Open Zone', name: 'Astartes Proving Grounds', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'1,4': {position: '1,4', type: 'Open Zone', name: 'Terra Incognita', defence: 1000, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'1,5': {position: '1,5', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'1,6': {position: '1,6', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'1,7': {position: '1,7', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'2,0': {position: '2,0', type: 'Command', name: 'Warp Nexus', defence: 3000, resources: 20, owner: 'Chaos', perk: 'Bonus 5'},
+'2,1': {position: '2,1', type: 'Key Location', name: 'Altar of Khorne', defence: 2000, resources: 10, owner: 'Chaos', perk: 'Bonus 6'},
+'2,2': {position: '2,2', type: 'Key Location', name: 'Tzeentch\'s Labyrinth', defence: 2000, resources: 10, owner: 'Chaos', perk: 'Bonus 7'},
+'2,3': {position: '2,3', type: 'Key Location', name: 'Nurgle\'s Garden', defence: 2000, resources: 10, owner: 'Chaos', perk: 'Bonus 8'},
+'2,4': {position: '2,4', type: 'Defense Line', name: 'Warp Rift', defence: 1500, resources: 5, owner: 'Chaos', perk: 'No Bonus'},
+'2,5': {position: '2,5', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'2,6': {position: '2,6', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'2,7': {position: '2,7', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'3,0': {position: '3,0', type: 'Defense Line', name: 'Bloodletter\'s Barricade', defence: 2000, resources: 5, owner: 'Chaos', perk: 'No Bonus'},
+'3,1': {position: '3,1', type: 'Supply Line', name: 'Path of Damnation', defence: 500, resources: 3, owner: 'Chaos', perk: 'No Bonus'},
+'3,2': {position: '3,2', type: 'Supply Line', name: 'Blood for the Blood God', defence: 100, resources: 3, owner: 'Chaos', perk: 'No Bonus'},
+'3,3': {position: '3,3', type: 'Open Zone', name: 'Chaos Wastes', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'3,4': {position: '3,4', type: 'Open Zone', name: 'Heretic\'s March', defence: 1000, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'3,5': {position: '3,5', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'3,6': {position: '3,6', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'3,7': {position: '3,7', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'4,0': {position: '4,0', type: 'Command', name: 'Tyranid Hive', defence: 3000, resources: 20, owner: 'Xenos', perk: 'Bonus 9'},
+'4,1': {position: '4,1', type: 'Key Location', name: 'Necron Crypt', defence: 2000, resources: 10, owner: 'Xenos', perk: 'Bonus 10'},
+'4,2': {position: '4,2', type: 'Key Location', name: 'Ork Mekshop', defence: 2000, resources: 10, owner: 'Xenos', perk: 'Bonus 11'},
+'4,3': {position: '4,3', type: 'Key Location', name: 'Tau Ethereal Shrine', defence: 2000, resources: 10, owner: 'Xenos', perk: 'Bonus 12'},
+'4,4': {position: '4,4', type: 'Defense Line', name: 'Tyranid Spore Chimneys', defence: 1500, resources: 5, owner: 'Xenos', perk: 'No Bonus'},
+'4,5': {position: '4,5', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'4,6': {position: '4,6', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+'4,7': {position: '4,7', type: 'Open Zone', name: 'Unnamed', defence: 100, resources: 1, owner: 'Open', perk: 'No Bonus'},
+                        // ... Add entries for all your tiles ...
+
+        // !!! Dont touch anything below !!! //
+        };
+
+        var canvas = document.getElementById('hexGrid');
+        var context = canvas.getContext('2d');
+        var hexSize = 50;
+        var hexWidth = Math.sqrt(3) * hexSize;
+        var hexHeight = 2 * hexSize;
+        var hoveredHex = null;
+        var cols = 5;
+        var rows = 8;
+        var dialog = document.getElementById('dialog');
+        var dialogText = document.getElementById('dialogText');
+
+        function getLineWidth(type) {
+            switch(type) {
+                case 'Command': return 5;
+                case 'Key Location': return 4;
+                case 'Defence Line': return 3;
+                case 'Supply Line': return 2;
+                case 'Open Zone': return 1;
+                default: return 1;
+            }
+        }
+
+        function getFillColor(owner, isHovered, x, y) {
+            var color;
+            switch(owner) {
+                case 'Imperium': color = '#5D3FD3'; break; // Blue for Imperium
+                case 'Chaos': color = '#702963'; break; // Red for Chaos
+                case 'Xenos': color = '#40B5AD'; break; // Green for Xenos
+                default: color = '#CCCCCC'; // Grey for unowned territories
+            }
+            var gradient = context.createRadialGradient(x, y, 0, x, y, hexSize);
+            gradient.addColorStop(0, color);
+            gradient.addColorStop(1, isHovered ? '#333333' : '#000000');
+            return gradient;
+        }
+
+        function getStrokeColor(isHovered) {
+            return isHovered ? '#CCCCCC' : 'white'; // Light grey border when hovered, black otherwise
+        }
+
+        function drawHex(x, y, lineWidth, fillColor, strokeColor) {
+            context.beginPath();
+            for (var side = 0; side < 7; side++) {
+                var cosAngle = Math.cos(side * 2 * Math.PI / 6);
+                var sinAngle = Math.sin(side * 2 * Math.PI / 6);
+                var xOffset = cosAngle * hexSize;
+                var yOffset = sinAngle * hexSize;
+                context.lineTo(x + xOffset, y + yOffset);
+            }
+            context.fillStyle = fillColor;
+            context.fill();
+            context.strokeStyle = strokeColor;
+            context.lineWidth = lineWidth;
+            context.stroke();
+        }
+
+        function drawHexGrid() {
+            var totalResourcesImperium = 0;
+            var totalResourcesChaos = 0;
+            var totalResourcesXenos = 0;
+            for (var col = 0; col < cols; col++) {
+                for (var row = 0; row < rows; row++) {
+                    var x = col * hexWidth;
+                    var y = row * hexHeight + ((col % 2 === 0) ? 0 : hexHeight / 2);
+                    var key = col + ',' + row;
+                    var tile = tileData[key];
+                    var isHovered = hoveredHex && hoveredHex.col === col && hoveredHex.row === row;
+                    var lineWidth = (tile && getLineWidth(tile.type)) || 1;
+                    var fillColor = (tile && getFillColor(tile.owner, isHovered, x + hexSize, y + hexSize)) || '#CCCCCC';
+                    var strokeColor = getStrokeColor(isHovered);
+                    drawHex(x + hexSize, y + hexSize, lineWidth, fillColor, strokeColor);
+
+                    // Draw position inside the hex
+                    if (tile) {
+                        context.font = '16px Lucida Console';
+                        context.fillStyle = 'white'; // Color of the text
+                        context.textAlign = 'center';
+                        context.fillText(tile.position, x + hexSize, y + hexSize + 8); // The "+ 8" is to center the text vertically
+                    }
+                    if (tile) {
+                        switch(tile.owner) {
+                            case 'Imperium':
+                                totalResourcesImperium += tile.resources;
+                                break;
+                            case 'Chaos':
+                                totalResourcesChaos += tile.resources;
+                                break;
+                            case 'Xenos':
+                                totalResourcesXenos += tile.resources;
+                                break;
+                        }
+                    }
+                }
+            }
+            context.font = '20px Lucida Console';
+            context.fillStyle = 'white'; // Color of the text
+
+            var resourcesImperium = document.getElementById('resourcesImperium');
+            var resourcesChaos = document.getElementById('resourcesChaos');
+            var resourcesXenos = document.getElementById('resourcesXenos');
+
+            resourcesImperium.innerHTML = 'Imperium: ' + totalResourcesImperium;
+            resourcesChaos.innerHTML = 'Chaos: ' + totalResourcesChaos;
+            resourcesXenos.innerHTML = 'Xenos: ' + totalResourcesXenos;
+
+            var imperialTextWidth = context.measureText(imperialText).width;
+            var chaosTextWidth = context.measureText(chaosText).width;
+            var xenosTextWidth = context.measureText(xenosText).width;
+
+            context.fillText(imperialText, imperialTextWidth + 400, 300);
+            context.fillText(chaosText, imperialTextWidth + 400, 200);
+            context.fillText(xenosText, imperialTextWidth + 400, 100);
+        }
+        
+        function hexCoordinates(x, y) {
+            var col = Math.floor(x / hexWidth);
+            var row = Math.floor((y - ((col % 2 === 0) ? 0 : hexHeight / 2)) / hexHeight);
+            return { col: col, row: row };
+        }
+
+        canvas.addEventListener('click', function(event) {
+            var rect = canvas.getBoundingClientRect();
+            var x = event.clientX - rect.left;
+            var y = event.clientY - rect.top;
+            var hex = hexCoordinates(x, y);
+            var key = hex.col + ',' + hex.row;
+            var info = tileData[key];
+            if (info) {
+                dialogText.innerHTML = 
+                    `<strong>Position:</strong> ${info.position}<br>` +
+                    `<strong>Type:</strong> ${info.type}<br>` +
+                    `<strong>Name:</strong> ${info.name}<br>` +
+                    `<strong>Defence:</strong> ${info.defence}<br>` +
+                    `<strong>Resources:</strong> ${info.resources}<br>` +
+                    `<strong>Owner:</strong> ${info.owner}<br>` +
+                    `<strong>Perk:</strong> ${info.perk}`;
+            } else {
+                dialogText.innerHTML = '<em>No info available for this tile</em>';
+            }
+            dialog.style.left = event.clientX + 'px';
+            dialog.style.top = event.clientY + 'px';
+            dialog.style.opacity = 0; // start invisible
+            dialog.style.display = 'block';
+            setTimeout(function() { dialog.style.opacity = 1; }, 1); // fade in
+        }, false);
+
+        canvas.addEventListener('mousemove', function(event) {
+            var rect = canvas.getBoundingClientRect();
+            var x = event.clientX - rect.left;
+            var y = event.clientY - rect.top;
+            var hex = hexCoordinates(x, y);
+            if (!hoveredHex || hoveredHex.col !== hex.col || hoveredHex.row !== hex.row) {
+                hoveredHex = hex;
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                drawHexGrid();
+            }
+        }, false);
+
+        window.addEventListener('click', function(event) {
+            if (event.target !== canvas) {
+                dialog.style.display = 'none';
+            }
+        }, false);
+
+        drawHexGrid();
+    </script>
+</body>
+</html>
